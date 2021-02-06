@@ -25,21 +25,25 @@ import java.util.Locale;
 import java.util.function.Consumer;
 
 import edu.cmu.cs.gabriel.camera.CameraCapture;
-import edu.cmu.cs.gabriel.camera.YuvToNv21Converter;
 import edu.cmu.cs.gabriel.camera.ImageViewUpdater;
+import edu.cmu.cs.gabriel.camera.YuvToJPEGConverter;
 import edu.cmu.cs.gabriel.client.comm.ServerComm;
 import edu.cmu.cs.gabriel.client.results.ErrorType;
 import edu.cmu.cs.gabriel.protocol.Protos;
 import edu.cmu.cs.gabriel.protocol.Protos.InputFrame;
 import edu.cmu.cs.gabriel.protocol.Protos.ResultWrapper;
 import edu.cmu.cs.ikea.Protos.ToClientExtras;
+import edu.cmu.cs.ikea.Protos.ToClientExtras.ZoomInfo;
 import edu.cmu.cs.ikea.Protos.ToServerExtras;
 import edu.cmu.cs.ikea.utils.Protobuf;
 
 public class GabrielActivity extends AppCompatActivity {
     private static final String TAG = "GabrielActivity";
+    private static final String SOURCE = "ikea";
+    private static final int PORT = 9099;
     private static final int WIDTH = 640;
     private static final int HEIGHT = 480;
+
 
     public static final String EXTRA_APP_KEY = "edu.cmu.cs.gabriel.ikea.APP_KEY";
     public static final String EXTRA_APP_SECRET = "edu.cmu.cs.gabriel.ikea.APP_SECRET";
@@ -49,19 +53,20 @@ public class GabrielActivity extends AppCompatActivity {
 
     private ServerComm serverComm;
     private TextToSpeech textToSpeech;
-    private YuvToNv21Converter yuvToNv21Converter;
+    private YuvToJPEGConverter yuvToJPEGConverter;
     private CameraCapture cameraCapture;
+    private edu.cmu.cs.ikea.Protos.State state;
 
     private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
             new StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
-                    ToServerExtras extras = ToServerExtras.newBuilder().setZoomStatus(
+                    ToServerExtras toServerExtras = ToServerExtras.newBuilder().setZoomStatus(
                             ToServerExtras.ZoomStatus.STOP).build();
-//                    InputFrame inputFrame = InputFrame.newBuilder().setExtras(
-//                            Protobuf.pack(extras)).build();
-//                    serverComm.send(inputFrame, "ikea", true);
+                    InputFrame inputFrame = InputFrame.newBuilder().setExtras(
+                            Protobuf.pack(toServerExtras)).build();
+                    serverComm.send(inputFrame, SOURCE, true);
                 }
             });
 
@@ -74,38 +79,49 @@ public class GabrielActivity extends AppCompatActivity {
         setContentView(R.layout.activity_gabriel);
 
         TextToSpeech.OnInitListener onInitListener = i -> textToSpeech.setLanguage(Locale.US);
-        textToSpeech = new TextToSpeech(this, onInitListener);
+        this.textToSpeech = new TextToSpeech(this, onInitListener);
 
         PreviewView viewFinder = findViewById(R.id.viewFinder);
         ImageView imageView = findViewById(R.id.imageView);
         ImageViewUpdater imageViewUpdater = new ImageViewUpdater(imageView);
+        this.state = null;
 
         Consumer<ResultWrapper> consumer = resultWrapper -> {
-            if (resultWrapper.hasExtras()) {
-                try {
-//                    ToClient toClient = ToClient.parseFrom(resultWrapper.getExtras().getValue());
-//
-//                    Intent intent = new Intent(this, ZoomActivity.class);
-//                    intent.putExtra(EXTRA_APP_KEY, toClient.getAppKey());
-//                    intent.putExtra(EXTRA_APP_SECRET, toClient.getAppSecret());
-//                    intent.putExtra(EXTRA_MEETING_NUMBER, toClient.getMeetingNumber());
-//                    intent.putExtra(EXTRA_MEETING_PASSWORD, toClient.getMeetingPassword());
+            try {
+                ToClientExtras toClientExtras = ToClientExtras.parseFrom(
+                        resultWrapper.getExtras().getValue());
 
-                    //activityResultLauncher.launch(intent);
-                } catch (/*InvalidProtocolBufferException*/ Exception e) {
-                    Log.e(TAG, "Protobuf parse error", e);
-                }
-                return;
-            }
+                if (toClientExtras.hasZoomInfo()) {
+                    ZoomInfo zoomInfo = toClientExtras.getZoomInfo();
 
-            for (ResultWrapper.Result result : resultWrapper.getResultsList()) {
-                if (result.getPayloadType() == Protos.PayloadType.TEXT) {
-                    String speech = result.getPayload().toStringUtf8();
-                    textToSpeech.speak(speech, TextToSpeech.QUEUE_ADD, null, null);
-                } else if (result.getPayloadType() == Protos.PayloadType.IMAGE) {
-                    ByteString jpegByteString = result.getPayload();
-                    imageViewUpdater.accept(jpegByteString);
+                    Intent intent = new Intent(this, ZoomActivity.class);
+                    intent.putExtra(EXTRA_APP_KEY, zoomInfo.getAppKey());
+                    intent.putExtra(EXTRA_APP_SECRET, zoomInfo.getAppSecret());
+                    intent.putExtra(EXTRA_MEETING_NUMBER, zoomInfo.getMeetingNumber());
+                    intent.putExtra(EXTRA_MEETING_PASSWORD, zoomInfo.getMeetingPassword());
+
+                    this.activityResultLauncher.launch(intent);
+                    return;
                 }
+
+                if (toClientExtras.getState().getUpdateCount() <= this.state.getUpdateCount()) {
+                    // There was no update or there was an update based on a stale frame
+                    return;
+                } else {
+                    this.state = toClientExtras.getState();
+                }
+
+                for (ResultWrapper.Result result : resultWrapper.getResultsList()) {
+                    if (result.getPayloadType() == Protos.PayloadType.TEXT) {
+                        String speech = result.getPayload().toStringUtf8();
+                        textToSpeech.speak(speech, TextToSpeech.QUEUE_ADD, null, null);
+                    } else if (result.getPayloadType() == Protos.PayloadType.IMAGE) {
+                        ByteString jpegByteString = result.getPayload();
+                        imageViewUpdater.accept(jpegByteString);
+                    }
+                }
+            } catch (InvalidProtocolBufferException e) {
+                Log.e(TAG, "Protobuf parse error", e);
             }
         };
 
@@ -115,30 +131,33 @@ public class GabrielActivity extends AppCompatActivity {
         };
 
         serverComm = ServerComm.createServerComm(
-                consumer, BuildConfig.GABRIEL_HOST, 9099, getApplication(), onDisconnect);
+                consumer, BuildConfig.GABRIEL_HOST, PORT, getApplication(), onDisconnect);
 
         this.cameraCapture = new CameraCapture(this, analyzer, WIDTH, HEIGHT, viewFinder);
-        this.yuvToNv21Converter = new YuvToNv21Converter();
+        this.yuvToJPEGConverter = new YuvToJPEGConverter(this);
     }
 
     final private ImageAnalysis.Analyzer analyzer = new ImageAnalysis.Analyzer() {
         @Override
         public void analyze(@NonNull ImageProxy image) {
+            if (state == null) {
+                image.close();
+                return;
+            }
             serverComm.sendSupplier(() -> {
-                ByteString nv21ByteString = yuvToNv21Converter.convertToBuffer(image);
+                ByteString jpegByteString = GabrielActivity.this.yuvToJPEGConverter.convert(image);
 
-//                ToServer extras = ToServer.newBuilder()
-//                        .setHeight(image.getHeight())
-//                        .setWidth(image.getWidth())
-//                        .setZoomStatus(ToServer.ZoomStatus.NO_CALL)
-//                        .build();
+                ToServerExtras toServerExtras = ToServerExtras.newBuilder()
+                        .setZoomStatus(ToServerExtras.ZoomStatus.NO_CALL)
+                        .setState(state)
+                        .build();
 
                 return InputFrame.newBuilder()
                         .setPayloadType(Protos.PayloadType.IMAGE)
-                        .addPayloads(nv21ByteString)
-                        //.setExtras(Protobuf.pack(extras))
+                        .addPayloads(jpegByteString)
+                        .setExtras(Protobuf.pack(toServerExtras))
                         .build();
-            }, "ikea", false);
+            }, SOURCE, false);
 
             image.close();
         }
@@ -151,8 +170,12 @@ public class GabrielActivity extends AppCompatActivity {
     }
 
     public void startZoom(View view) {
-//        ToServer extras = ToServer.newBuilder().setZoomStatus(ToServer.ZoomStatus.START).build();
-//        InputFrame inputFrame = InputFrame.newBuilder().setExtras(Protobuf.pack(extras)).build();
-//        serverComm.send(inputFrame, "ikea", true);
+        ToServerExtras extras = ToServerExtras.newBuilder()
+                .setZoomStatus(ToServerExtras.ZoomStatus.START)
+                .setState(state)
+                .build();
+        InputFrame inputFrame = InputFrame.newBuilder().setExtras(Protobuf.pack(extras)).build();
+        this.state = null;  // Stop sending frames to server until client receives new state
+        serverComm.send(inputFrame, SOURCE, true);
     }
 }

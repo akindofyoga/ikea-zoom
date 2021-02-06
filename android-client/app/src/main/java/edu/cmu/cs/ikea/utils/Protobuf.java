@@ -9,7 +9,7 @@ public class Protobuf {
     // https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/compiler/java/java_message.cc#L1387
     public static Any pack(Protos.ToServerExtras extras) {
         return Any.newBuilder()
-                .setTypeUrl("type.googleapis.com/sandwich.ToServer")
+                .setTypeUrl("type.googleapis.com/ikea.ToServerExtras")
                 .setValue(extras.toByteString())
                 .build();
     }

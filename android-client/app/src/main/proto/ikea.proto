@@ -19,9 +19,10 @@ message State {
         BULB_TOP = 9;
     }
 
-    Step step = 1;
-    int32 frames_with_one_buckle = 2;
-    int32 frames_with_two_buckles = 3;
+    int64 update_count = 1;
+    Step step = 2;
+    int32 frames_with_one_buckle = 3;
+    int32 frames_with_two_buckles = 4;
 }
 
 message ToServerExtras {
@@ -42,5 +43,5 @@ message ToClientExtras {
         string meeting_password = 4;
     }
     ZoomInfo zoom_info = 1;
-    State state = 2;
+    State state = 3;
 }

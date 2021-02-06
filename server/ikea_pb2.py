@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='sandwich',
   syntax='proto3',
   serialized_options=_b('\n\017edu.cmu.cs.ikeaB\006Protos'),
-  serialized_pb=_b('\n\nikea.proto\x12\x08sandwich\"\xf2\x01\n\x05State\x12\"\n\x04step\x18\x01 \x01(\x0e\x32\x14.sandwich.State.Step\x12\x1e\n\x16\x66rames_with_one_buckle\x18\x02 \x01(\x05\x12\x1f\n\x17\x66rames_with_two_buckles\x18\x03 \x01(\x05\"\x83\x01\n\x04Step\x12\t\n\x05START\x10\x00\x12\x0b\n\x07NOTHING\x10\x01\x12\x08\n\x04\x42\x41SE\x10\x02\x12\x08\n\x04PIPE\x10\x03\x12\t\n\x05SHADE\x10\x04\x12\n\n\x06\x42UCKLE\x10\x05\x12\x10\n\x0c\x42LACK_CIRCLE\x10\x06\x12\x0e\n\nSHADE_BASE\x10\x07\x12\x08\n\x04\x42ULB\x10\x08\x12\x0c\n\x08\x42ULB_TOP\x10\t\"\x9a\x01\n\x0eToServerExtras\x12\x38\n\x0bzoom_status\x18\x01 \x01(\x0e\x32#.sandwich.ToServerExtras.ZoomStatus\x12\x1e\n\x05state\x18\x02 \x01(\x0b\x32\x0f.sandwich.State\".\n\nZoomStatus\x12\x0b\n\x07NO_CALL\x10\x00\x12\t\n\x05START\x10\x01\x12\x08\n\x04STOP\x10\x02\"\xc9\x01\n\x0eToClientExtras\x12\x34\n\tzoom_info\x18\x01 \x01(\x0b\x32!.sandwich.ToClientExtras.ZoomInfo\x12\x1e\n\x05state\x18\x02 \x01(\x0b\x32\x0f.sandwich.State\x1a\x61\n\x08ZoomInfo\x12\x0f\n\x07\x61pp_key\x18\x01 \x01(\t\x12\x12\n\napp_secret\x18\x02 \x01(\t\x12\x16\n\x0emeeting_number\x18\x03 \x01(\t\x12\x18\n\x10meeting_password\x18\x04 \x01(\tB\x19\n\x0f\x65\x64u.cmu.cs.ikeaB\x06Protosb\x06proto3')
+  serialized_pb=_b('\n\nikea.proto\x12\x08sandwich\"\x88\x02\n\x05State\x12\x14\n\x0cupdate_count\x18\x01 \x01(\x03\x12\"\n\x04step\x18\x02 \x01(\x0e\x32\x14.sandwich.State.Step\x12\x1e\n\x16\x66rames_with_one_buckle\x18\x03 \x01(\x05\x12\x1f\n\x17\x66rames_with_two_buckles\x18\x04 \x01(\x05\"\x83\x01\n\x04Step\x12\t\n\x05START\x10\x00\x12\x0b\n\x07NOTHING\x10\x01\x12\x08\n\x04\x42\x41SE\x10\x02\x12\x08\n\x04PIPE\x10\x03\x12\t\n\x05SHADE\x10\x04\x12\n\n\x06\x42UCKLE\x10\x05\x12\x10\n\x0c\x42LACK_CIRCLE\x10\x06\x12\x0e\n\nSHADE_BASE\x10\x07\x12\x08\n\x04\x42ULB\x10\x08\x12\x0c\n\x08\x42ULB_TOP\x10\t\"\x9a\x01\n\x0eToServerExtras\x12\x38\n\x0bzoom_status\x18\x01 \x01(\x0e\x32#.sandwich.ToServerExtras.ZoomStatus\x12\x1e\n\x05state\x18\x02 \x01(\x0b\x32\x0f.sandwich.State\".\n\nZoomStatus\x12\x0b\n\x07NO_CALL\x10\x00\x12\t\n\x05START\x10\x01\x12\x08\n\x04STOP\x10\x02\"\xc9\x01\n\x0eToClientExtras\x12\x34\n\tzoom_info\x18\x01 \x01(\x0b\x32!.sandwich.ToClientExtras.ZoomInfo\x12\x1e\n\x05state\x18\x03 \x01(\x0b\x32\x0f.sandwich.State\x1a\x61\n\x08ZoomInfo\x12\x0f\n\x07\x61pp_key\x18\x01 \x01(\t\x12\x12\n\napp_secret\x18\x02 \x01(\t\x12\x16\n\x0emeeting_number\x18\x03 \x01(\t\x12\x18\n\x10meeting_password\x18\x04 \x01(\tB\x19\n\x0f\x65\x64u.cmu.cs.ikeaB\x06Protosb\x06proto3')
 )
 
 
@@ -74,8 +74,8 @@ _STATE_STEP = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=136,
-  serialized_end=267,
+  serialized_start=158,
+  serialized_end=289,
 )
 _sym_db.RegisterEnumDescriptor(_STATE_STEP)
 
@@ -100,8 +100,8 @@ _TOSERVEREXTRAS_ZOOMSTATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=378,
-  serialized_end=424,
+  serialized_start=400,
+  serialized_end=446,
 )
 _sym_db.RegisterEnumDescriptor(_TOSERVEREXTRAS_ZOOMSTATUS)
 
@@ -114,22 +114,29 @@ _STATE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='step', full_name='sandwich.State.step', index=0,
-      number=1, type=14, cpp_type=8, label=1,
+      name='update_count', full_name='sandwich.State.update_count', index=0,
+      number=1, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='frames_with_one_buckle', full_name='sandwich.State.frames_with_one_buckle', index=1,
-      number=2, type=5, cpp_type=1, label=1,
+      name='step', full_name='sandwich.State.step', index=1,
+      number=2, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='frames_with_two_buckles', full_name='sandwich.State.frames_with_two_buckles', index=2,
+      name='frames_with_one_buckle', full_name='sandwich.State.frames_with_one_buckle', index=2,
       number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='frames_with_two_buckles', full_name='sandwich.State.frames_with_two_buckles', index=3,
+      number=4, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -148,7 +155,7 @@ _STATE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=25,
-  serialized_end=267,
+  serialized_end=289,
 )
 
 
@@ -186,8 +193,8 @@ _TOSERVEREXTRAS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=270,
-  serialized_end=424,
+  serialized_start=292,
+  serialized_end=446,
 )
 
 
@@ -238,8 +245,8 @@ _TOCLIENTEXTRAS_ZOOMINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=531,
-  serialized_end=628,
+  serialized_start=553,
+  serialized_end=650,
 )
 
 _TOCLIENTEXTRAS = _descriptor.Descriptor(
@@ -258,7 +265,7 @@ _TOCLIENTEXTRAS = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='state', full_name='sandwich.ToClientExtras.state', index=1,
-      number=2, type=11, cpp_type=10, label=1,
+      number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -275,8 +282,8 @@ _TOCLIENTEXTRAS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=427,
-  serialized_end=628,
+  serialized_start=449,
+  serialized_end=650,
 )
 
 _STATE.fields_by_name['step'].enum_type = _STATE_STEP
