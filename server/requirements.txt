@@ -1,0 +1,9 @@
+psutil==5.6.4
+setuptools
+opencv-python==4.2.0.*
+matplotlib==3.1.1
+easydict==1.9
+Cython==0.29.14
+gabriel-server==2.0.2
+aiohttp==3.6.2
+aiohttp-jinja2==1.2.0

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package sandwich;
+
+option java_package = "edu.cmu.cs.ikea";
+option java_outer_classname = "Protos";
+
+message State {
+    enum Step {
+        START = 0;
+        NOTHING = 1;
+        BASE = 2;
+        PIPE = 3;
+        SHADE = 4;
+        BUCKLE = 5;
+        BLACK_CIRCLE = 6;
+        SHADE_BASE = 7;
+        BULB = 8;
+        BULB_TOP = 9;
+    }
+
+    Step step = 1;
+    int32 frames_with_one_buckle = 2;
+    int32 frames_with_two_buckles = 3;
+}
+
+message ToServerExtras {
+    enum ZoomStatus {
+        NO_CALL = 0;
+        START = 1;
+        STOP = 2;
+    }
+    ZoomStatus zoom_status = 1;
+    State state = 2;
+}
+
+message ToClientExtras {
+    message ZoomInfo {
+        string app_key = 1;
+        string app_secret = 2;
+        string meeting_number = 3;
+        string meeting_password = 4;
+    }
+    ZoomInfo zoom_info = 1;
+    State state = 2;
+}
