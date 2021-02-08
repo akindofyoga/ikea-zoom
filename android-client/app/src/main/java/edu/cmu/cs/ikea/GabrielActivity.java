@@ -84,7 +84,15 @@ public class GabrielActivity extends AppCompatActivity {
         PreviewView viewFinder = findViewById(R.id.viewFinder);
         ImageView imageView = findViewById(R.id.imageView);
         ImageViewUpdater imageViewUpdater = new ImageViewUpdater(imageView);
-        this.state = null;
+
+        // Once this clinet is changed to support multiple tasks, we should start with an empty
+        // state
+        this.state = edu.cmu.cs.ikea.Protos.State.newBuilder()
+                .setUpdateCount(0L)
+                .setStep(edu.cmu.cs.ikea.Protos.State.Step.START)
+                .setFramesWithOneBuckle(0)
+                .setFramesWithTwoBuckles(0)
+                .build();
 
         Consumer<ResultWrapper> consumer = resultWrapper -> {
             try {
@@ -104,7 +112,8 @@ public class GabrielActivity extends AppCompatActivity {
                     return;
                 }
 
-                if (toClientExtras.getState().getUpdateCount() <= this.state.getUpdateCount()) {
+                if (this.state != null &&
+                        toClientExtras.getState().getUpdateCount() <= this.state.getUpdateCount()) {
                     // There was no update or there was an update based on a stale frame
                     return;
                 } else {

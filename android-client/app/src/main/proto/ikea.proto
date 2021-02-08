@@ -8,15 +8,15 @@ option java_outer_classname = "Protos";
 message State {
     enum Step {
         START = 0;
-        NOTHING = 1;
-        BASE = 2;
-        PIPE = 3;
-        SHADE = 4;
-        BUCKLE = 5;
-        BLACK_CIRCLE = 6;
-        SHADE_BASE = 7;
+        BASE = 1;
+        PIPE = 2;
+        SHADE = 3;
+        BUCKLE = 4;
+        BLACKCIRCLE = 6;
+        LAMP = 7;
         BULB = 8;
-        BULB_TOP = 9;
+        BULBTOP = 9;
+	DONE = 10
     }
 
     int64 update_count = 1;
@@ -42,6 +42,9 @@ message ToClientExtras {
         string meeting_number = 3;
         string meeting_password = 4;
     }
-    ZoomInfo zoom_info = 1;
-    State state = 3;
+
+    oneof zoom_info_or_state {
+        ZoomInfo zoom_info = 1;
+        State state = 2;
+    }
 }
