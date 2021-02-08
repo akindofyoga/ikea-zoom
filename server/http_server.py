@@ -49,10 +49,6 @@ def get_signature(meeting_number, key, role, secret):
     return signature.rstrip('=')
 
 
-async def favicon(request):
-    return web.FileResponse('favicon.ico')
-
-
 class ServerState:
     def __init__(self):
         self._state = None
@@ -114,7 +110,6 @@ def start_http_server(conn):
     app.add_routes([
         web.get('/', index),
         web.get('/zoom', zoom),
-        web.get('/favicon.ico', favicon),
         web.static('/static', 'static'),
         web.static('/images', 'images'),
         web.get('/ws', websocket_handler),

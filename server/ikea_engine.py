@@ -32,8 +32,6 @@ IMAGE_MAX_WH = 640
 CONF_THRESH = 0.5
 NMS_THRESH = 0.3
 
-IMAGE_DIR = 'images'
-
 DUMMY_IMG_SIZE = (300, 500, 3)
 
 CLASS_IDX_LIMIT = cv_rules.BULB + 1  # Bulb has the highest index
@@ -47,7 +45,7 @@ faster_rcnn_config.TEST.HAS_RPN = True  # Use RPN for proposals
 logger = logging.getLogger(__name__)
 
 
-PROTO_TO_STATE = {state.get_proto_step: state for state in cv_rules.State}
+PROTO_TO_STATE = {state.get_proto_step(): state for state in cv_rules.State}
 
 
 class IkeaEngine(cognitive_engine.Engine):
@@ -121,7 +119,7 @@ class IkeaEngine(cognitive_engine.Engine):
             status = gabriel_pb2.ResultWrapper.Status.SUCCESS
             result_wrapper = cognitive_engine.create_result_wrapper(status)
 
-            to_client_extras = sandwich_pb2.ToClientExtras()
+            to_client_extras = ikea_pb2.ToClientExtras()
             to_client_extras.zoom_info.app_key = credentials.ANDROID_KEY
             to_client_extras.zoom_info.app_secret = credentials.ANDROID_SECRET
             to_client_extras.zoom_info.meeting_number = (
@@ -132,7 +130,7 @@ class IkeaEngine(cognitive_engine.Engine):
             result_wrapper.extras.Pack(to_client_extras)
             return result_wrapper
         elif (to_server_extras.zoom_status ==
-              sandwich_pb2.ToServer.ZoomStatus.STOP):
+              ikea_pb2.ToServerExtras.ZoomStatus.STOP):
             msg = {
                 'zoom_action': 'stop'
             }
@@ -153,28 +151,34 @@ class IkeaEngine(cognitive_engine.Engine):
         if max(img.shape) > IMAGE_MAX_WH:
             raise Exception('Image too large')
 
-        return self._result_wrapper_from_cv(img, state)
+        return self._result_wrapper_from_cv(img, to_server_extras.state)
 
     def _result_wrapper_from_cv(self, img, old_state):
         dets_for_class = self._detect_objects(img)
 
-        if old_state == cv_rules.State.BASE:
-            return cv_rules.base_result(dets_for_class, old_state)
-        elif old_state == cv_rules.State.PIPE:
-            return cv_rules.pipe_result(dets_for_class, old_state)
-        elif old_state == cv_rules.State.SHADE:
-            return cv_rules.shade_result(dets_for_class, old_state)
-        elif old_state == cv_rules.State.BUCKLE:
-            return cv_rules.buckle_result(dets_for_class, old_state)
-        elif old_state == cv_rules.State.BLACKCIRCLE:
-            return cv_rules.blackcircle_result(dets_for_class, old_state)
-        elif old_state == cv_rules.State.LAMP:
-            return cv_rules.lamp_result(dets_for_class, old_state)
-        elif old_state == cv_rules.State.BULB:
-            return cv_rules.bulb_result(dets_for_class, old_state)
-        elif old_state == cv_rules.State.BULBTOP:
-            return cv_rules.bulbtop_result(dets_for_class, old_state)
-        elif old_state == cv_rules.State.DONE:
-            return cv_rules.done_result(dets_for_class, old_state)
+        update_count = old_state.update_count
+        old_step = old_state.step
+        if old_state == ikea_pb2.State.Step.BASE:
+            return cv_rules.base_result(dets_for_class, update_count)
+        elif old_state == ikea_pb2.State.Step.PIPE:
+            return cv_rules.pipe_result(dets_for_class, update_count)
+        elif old_state == ikea_pb2.State.Step.SHADE:
+            return cv_rules.shade_result(dets_for_class, update_count)
+        elif old_state == ikea_pb2.State.Step.BUCKLE:
+            frames_with_one_buckle = old_state.frames_with_one_buckle
+            frames_with_two_buckles = old_state.frames_with_two_buckles
+            return cv_rules.buckle_result(
+                dets_for_class, update_count, frames_with_one_buckle,
+                frames_with_two_buckles)
+        elif old_state == ikea_pb2.State.Step.BLACKCIRCLE:
+            return cv_rules.blackcircle_result(dets_for_class, update_count)
+        elif old_state == ikea_pb2.State.Step.LAMP:
+            return cv_rules.lamp_result(dets_for_class, update_count)
+        elif old_state == ikea_pb2.State.Step.BULB:
+            return cv_rules.bulb_result(dets_for_class, update_count)
+        elif old_state == ikea_pb2.State.Step.BULBTOP:
+            return cv_rules.bulbtop_result(dets_for_class, update_count)
+        elif old_state == ikea_pb2.State.Step.DONE:
+            return cv_rules.done_result(dets_for_class, update_count)
         else:
             raise Exception('Bad State')

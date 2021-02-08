@@ -4,30 +4,33 @@ from gabriel_protocol import gabriel_pb2
 from gabriel_server import cognitive_engine
 
 
+IMAGE_DIR = 'images'
+
+
 ONE_WIRE_INSTRUCTION_BYTES = ('You have inserted one wire. Now insert the '
                               'second wire to support the shade.'.encode())
 
 
 class State(Enum):
-    BASE = ('Put the base on the table.', 'base.PNG',
+    BASE = ('Put the base on the table.', 'base.png',
             ikea_pb2.State.Step.BASE)
-    PIPE = ('Screw the pipe on top of the base.', 'pipe.PNG',
+    PIPE = ('Screw the pipe on top of the base.', 'pipe.png',
             ikea_pb2.State.Step.PIPE)
-    SHADE = ('Good job. Now find the shade cover and expand it.', 'shade.PNG',
+    SHADE = ('Good job. Now find the shade cover and expand it.', 'shade.png',
              ikea_pb2.State.Step.SHADE)
     BUCKLE = ('Insert the iron wires to support the shade. Then show the top '
-              'view of the shade', 'buckle.PNG', ikea_pb2.State.Step.BUCKLE)
+              'view of the shade', 'buckle.png', ikea_pb2.State.Step.BUCKLE)
     BLACKCIRCLE = ('Great. Now unscrew the black ring out of the pipe, and put '
-                   'it on the table.', 'blackcircle.PNG',
+                   'it on the table.', 'blackcircle.png',
                    ikea_pb2.State.Step.BLACKCIRCLE)
     LAMP = ('Now put the shade on top of the base, and screw the black ring'
-            ' back.', 'lamp.PNG', ikea_pb2.State.Step.LAMP)
-    BULB = ('Find the bulb and put it on the table.', 'bulb.PNG',
+            ' back.', 'lamp.png', ikea_pb2.State.Step.LAMP)
+    BULB = ('Find the bulb and put it on the table.', 'bulb.png',
             ikea_pb2.State.Step.BULB)
     BULBTOP = ('Good. Last step. Screw in the bulb and show me the top view.',
-               'lamptop.PNG', ikea_pb2.State.Step.BULBTOP)
+               'bulbtop.png', ikea_pb2.State.Step.BULBTOP)
     DONE = ('Congratulations. You have finished assembling the lamp.',
-            'lamp.PNG', ikea_pb2.State.Step.DONE)
+            'lamp.png', ikea_pb2.State.Step.DONE)
 
     def __init__(self, speech, image_filename, proto_step):
         self._speech_bytes = speech.encode()
@@ -38,7 +41,7 @@ class State(Enum):
     def get_proto_step(self):
         return self._proto_step
 
-    def create_result_wrapper(self, update_count):
+    def update_result_wrapper(self, update_count):
         status = gabriel_pb2.ResultWrapper.Status.SUCCESS
         result_wrapper = cognitive_engine.create_result_wrapper(status)
 
@@ -62,6 +65,17 @@ class State(Enum):
 
         return result_wrapper
 
+    def result_wrapper_without_update(self, update_count):
+        status = gabriel_pb2.ResultWrapper.Status.SUCCESS
+        result_wrapper = cognitive_engine.create_result_wrapper(status)
+
+        to_client_extras = ikea_pb2.ToClientExtras()
+        to_client_extras.state.update_count = update_count
+        to_client_extras.state.step = self._proto_step
+
+        result_wrapper.extras.Pack(to_client_extras)
+        return result_wrapper
+
 
 # Class indexes come from the following code:
 # LABELS = ["base", "pipe", "shade", "shadetop", "buckle", "blackcircle",
@@ -83,30 +97,18 @@ SHADE = 8
 BULB = 9
 
 
-def _result_without_update(state):
-    status = gabriel_pb2.ResultWrapper.Status.SUCCESS
-    result_wrapper = cognitive_engine.create_result_wrapper(status)
-
-    to_client_extras = ikea_pb2.ToClientExtras()
-    to_client_extras.state = state  # TODO take step instead of state
-
-    result_wrapper.extras.Pack(to_client_extras)
-    return result_wrapper
-
-
-def base_result(dets_for_class, old_state):
+def base_result(dets_for_class, update_count):
     if len(dets_for_class[BASE]) == 0:
-        return _result_without_update(old_state)
+        return State.BASE.result_wrapper_without_update(update_count)
 
-    update_count = old_state.update_count + 1
-    return State.PIPE.create_result_wrapper(update_count)
+    return State.PIPE.create_result_wrapper(update_count + 1)
 
 
-def pipe_result(dets_for_class, old_state):
+def pipe_result(dets_for_class, update_count):
     bases = dets_for_class[BASE]
     pipes = dets_for_class[PIPE]
     if (len(bases) == 0) or (len(pipes) == 0):
-        return _result_without_update(old_state)
+        return State.PIPE.result_wrapper_without_update(update_count)
 
     for base in bases:
         base_center = ((base[0] + base[2]) / 2, (base[1] + base[3]) / 2)
@@ -123,18 +125,16 @@ def pipe_result(dets_for_class, old_state):
             if pipe_height / base_height < 1.5:
                 continue
 
-            update_count = old_state.update_count + 1
-            return State.SHADE.create_result_wrapper(update_count)
+            return State.SHADE.create_result_wrapper(update_count + 1)
 
-    return _result_without_update(old_state)
+    return State.PIPE.result_wrapper_without_update(update_count)
 
 
-def shade_result(dets_for_class, old_state):
-    if len(dets_for_class[SHADE]) > 0:
-        update_count = old_state.update_count + 1
-        return State.BUCKLE.create_result_wrapper(update_count)
+def shade_result(dets_for_class, update_count):
+    if len(dets_for_class[SHADE]) == 0:
+        return State.SHADE.result_wrapper_without_update(update_count)
 
-    return _result_without_update(old_state)
+    return State.BUCKLE.create_result_wrapper(update_count + 1)
 
 
 def _count_buckles(shadetops, buckles):
@@ -163,18 +163,15 @@ def _count_buckles(shadetops, buckles):
     return int(left_buckle) + int(right_buckle)
 
 
-def _buckle_result(dets_for_class, old_state):
-    status = gabriel_pb2.ResultWrapper.Status.SUCCESS
-    result_wrapper = cognitive_engine.create_result_wrapper(status)
-    frames_with_one_buckle = old_state.frames_with_one_buckle
-    frames_with_two_buckles = old_state.frames_with_two_buckles
-    update_count = old_state.update_count
-
+def buckle_result(dets_for_class, update_count, frames_with_one_buckle,
+                  frames_with_two_buckles):
     shadetops = dets_for_class[SHADETOP]
     buckles = dets_for_class[BUCKLE]
     if (len(shadetops) == 0) or (len(buckles) == 0):
-        return _result_without_update(old_state)
+        return State.BUCKLE.result_wrapper_without_update(update_count)
 
+    status = gabriel_pb2.ResultWrapper.Status.SUCCESS
+    result_wrapper = cognitive_engine.create_result_wrapper(status)
     n_buckles = _count_buckles(shadetops, buckles)
     if n_buckles == 2:
         frames_with_one_buckle = 0
@@ -182,7 +179,7 @@ def _buckle_result(dets_for_class, old_state):
         update_count += 1
 
         if frames_with_two_buckles > 3:
-            return State.LAMP.create_result_wrapper(update_count)
+            return State.BLACKCIRCLE.create_result_wrapper(update_count)
     elif n_buckles == 1:
         frames_with_one_buckle += 1
         frames_with_two_buckles = 0
@@ -206,3 +203,60 @@ def _buckle_result(dets_for_class, old_state):
 
     result_wrapper.extras.Pack(to_client_extras)
     return result_wrapper
+
+
+def blackcircle_result(dets_for_class, update_count):
+    if len(dets_for_class[BLACKCIRCLE]) == 0:
+        return State.BLACKCIRCLE.result_wrapper_without_update(update_count)
+
+    return State.LAMP.create_result_wrapper(update_count + 1)
+
+
+def lamp_result(dets_for_class, update_count):
+    if len(dets_for_class[LAMP]) == 0:
+        return State.LAMP.result_wrapper_without_update(update_count)
+
+    return State.BULB.create_result_wrapper(update_count + 1)
+
+
+def bulb_result(dets_for_class, update_count):
+    if len(dets_for_class[BULB]) == 0:
+        return State.BULB.result_wrapper_without_update(update_count)
+
+    return State.BULBTOP.create_result_wrapper(update_count + 1)
+
+
+def bulbtop_result(dets_for_class, update_count):
+    shadetops = dets_for_class[SHADETOP]
+    bulbtops = dets_for_class[BULBTOP]
+    if (len(shadetops) == 0) or (len(bulbtops) == 0):
+        return State.BULBTOP.result_wrapper_without_update(update_count)
+
+    for shadetop in shadetops:
+        shadetop_center = ((shadetop[0] + shadetop[2]) / 2,
+                           (shadetop[1] + shadetop[3]) / 2)
+        shadetop_width = shadetop[2] - shadetop[0]
+        shadetop_height = shadetop[3] - shadetop[1]
+
+        for bulbtop in bulbtops:
+            bulbtop_center = ((bulbtop[0] + bulbtop[2]) / 2,
+                              (bulbtop[1] + bulbtop[3]) / 2)
+            if bulbtop_center[1] < shadetop[1] or (
+                    bulbtop_center[1] > shadetop[3]):
+                continue
+            if bulbtop_center[0] < shadetop[0] or (
+                    bulbtop_center[0] > shadetop[2]):
+                continue
+            if (bulbtop_center[0] < shadetop_center[0] -
+                shadetop_width * 0.25) or (
+                    bulbtop_center[0] > shadetop_center[0] +
+                    shadetop_width * 0.25):
+                continue
+            if (bulbtop_center[1] < shadetop_center[1] - shadetop_height *
+                0.25) or (bulbtop_center[1] > shadetop_center[1] +
+                          shadetop_height * 0.25):
+                continue
+
+            return State.DONE.create_result_wrapper(update_count + 1)
+
+    return State.BULBTOP.result_wrapper_without_update(update_count)
