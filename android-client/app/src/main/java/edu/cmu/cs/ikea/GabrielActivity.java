@@ -35,9 +35,7 @@ import edu.cmu.cs.gabriel.protocol.Protos.ResultWrapper;
 import edu.cmu.cs.ikea.Protos.ToClientExtras;
 import edu.cmu.cs.ikea.Protos.ToClientExtras.ZoomInfo;
 import edu.cmu.cs.ikea.Protos.ToServerExtras;
-import edu.cmu.cs.ikea.utils.Protobuf;
 import edu.cmu.cs.ikea.Protos.State;
-import edu.cmu.cs.ikea.Protos.State.Step;
 
 import static edu.cmu.cs.ikea.utils.Protobuf.pack;
 
@@ -61,16 +59,25 @@ public class GabrielActivity extends AppCompatActivity {
     private CameraCapture cameraCapture;
     private edu.cmu.cs.ikea.Protos.State state;
 
+    private boolean onZoomCall;
+    private String toSpeak;
+
     private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
             new StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
+                    TextToSpeech.OnInitListener onInitListener = i -> textToSpeech.setLanguage(Locale.US);
+                    GabrielActivity.this.textToSpeech = new TextToSpeech(GabrielActivity.this, onInitListener);
+
                     ToServerExtras toServerExtras = ToServerExtras.newBuilder().setZoomStatus(
                             ToServerExtras.ZoomStatus.STOP).build();
                     InputFrame inputFrame = InputFrame.newBuilder().setExtras(
                             pack(toServerExtras)).build();
                     serverComm.send(inputFrame, SOURCE, true);
+
+                    GabrielActivity.this.state = null;
+                    GabrielActivity.this.onZoomCall = false;
                 }
             });
 
@@ -112,8 +119,14 @@ public class GabrielActivity extends AppCompatActivity {
                     intent.putExtra(EXTRA_MEETING_NUMBER, zoomInfo.getMeetingNumber());
                     intent.putExtra(EXTRA_MEETING_PASSWORD, zoomInfo.getMeetingPassword());
 
+
                     this.activityResultLauncher.launch(intent);
                     return;
+                }
+
+                if (toSpeak != null) {
+                    textToSpeech.speak(toSpeak, TextToSpeech.QUEUE_ADD, null, "jeb");
+                    toSpeak = null;
                 }
 
                 if (this.state != null &&
@@ -127,7 +140,7 @@ public class GabrielActivity extends AppCompatActivity {
                 for (ResultWrapper.Result result : resultWrapper.getResultsList()) {
                     if (result.getPayloadType() == Protos.PayloadType.TEXT) {
                         String speech = result.getPayload().toStringUtf8();
-                        textToSpeech.speak(speech, TextToSpeech.QUEUE_ADD, null, null);
+                        toSpeak = speech;
                     } else if (result.getPayloadType() == Protos.PayloadType.IMAGE) {
                         ByteString jpegByteString = result.getPayload();
                         imageViewUpdater.accept(jpegByteString);
@@ -147,15 +160,18 @@ public class GabrielActivity extends AppCompatActivity {
                 consumer, BuildConfig.GABRIEL_HOST, PORT, getApplication(), onDisconnect);
         this.cameraCapture = new CameraCapture(this, analyzer, WIDTH, HEIGHT, viewFinder);
         this.yuvToJPEGConverter = new YuvToJPEGConverter(this);
+
+        this.onZoomCall = false;
     }
 
     final private ImageAnalysis.Analyzer analyzer = new ImageAnalysis.Analyzer() {
         @Override
         public void analyze(@NonNull ImageProxy image) {
-            if (state == null) {
+            if (GabrielActivity.this.onZoomCall || GabrielActivity.this.state == null) {
                 image.close();
                 return;
             }
+
             serverComm.sendSupplier(() -> {
                 ByteString jpegByteString = GabrielActivity.this.yuvToJPEGConverter.convert(image);
 
@@ -179,6 +195,7 @@ public class GabrielActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         this.cameraCapture.shutdown();
+        this.textToSpeech.shutdown();
     }
 
     public void startZoom(View view) {
@@ -187,7 +204,7 @@ public class GabrielActivity extends AppCompatActivity {
                 .setState(state)
                 .build();
         InputFrame inputFrame = InputFrame.newBuilder().setExtras(pack(extras)).build();
-        this.state = null;  // Stop sending frames to server until client receives new state
+        this.onZoomCall = true;
         serverComm.send(inputFrame, SOURCE, true);
     }
 }
