@@ -16,7 +16,7 @@ message State {
         LAMP = 7;
         BULB = 8;
         BULBTOP = 9;
-	DONE = 10
+	DONE = 10;
     }
 
     int64 update_count = 1;

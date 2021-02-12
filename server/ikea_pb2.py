@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='sandwich',
   syntax='proto3',
   serialized_options=_b('\n\017edu.cmu.cs.ikeaB\006Protos'),
-  serialized_pb=_b('\n\nikea.proto\x12\x08sandwich\"\x88\x02\n\x05State\x12\x14\n\x0cupdate_count\x18\x01 \x01(\x03\x12\"\n\x04step\x18\x02 \x01(\x0e\x32\x14.sandwich.State.Step\x12\x1e\n\x16\x66rames_with_one_buckle\x18\x03 \x01(\x05\x12\x1f\n\x17\x66rames_with_two_buckles\x18\x04 \x01(\x05\"\x83\x01\n\x04Step\x12\t\n\x05START\x10\x00\x12\x0b\n\x07NOTHING\x10\x01\x12\x08\n\x04\x42\x41SE\x10\x02\x12\x08\n\x04PIPE\x10\x03\x12\t\n\x05SHADE\x10\x04\x12\n\n\x06\x42UCKLE\x10\x05\x12\x10\n\x0c\x42LACK_CIRCLE\x10\x06\x12\x0e\n\nSHADE_BASE\x10\x07\x12\x08\n\x04\x42ULB\x10\x08\x12\x0c\n\x08\x42ULB_TOP\x10\t\"\x9a\x01\n\x0eToServerExtras\x12\x38\n\x0bzoom_status\x18\x01 \x01(\x0e\x32#.sandwich.ToServerExtras.ZoomStatus\x12\x1e\n\x05state\x18\x02 \x01(\x0b\x32\x0f.sandwich.State\".\n\nZoomStatus\x12\x0b\n\x07NO_CALL\x10\x00\x12\t\n\x05START\x10\x01\x12\x08\n\x04STOP\x10\x02\"\xc9\x01\n\x0eToClientExtras\x12\x34\n\tzoom_info\x18\x01 \x01(\x0b\x32!.sandwich.ToClientExtras.ZoomInfo\x12\x1e\n\x05state\x18\x03 \x01(\x0b\x32\x0f.sandwich.State\x1a\x61\n\x08ZoomInfo\x12\x0f\n\x07\x61pp_key\x18\x01 \x01(\t\x12\x12\n\napp_secret\x18\x02 \x01(\t\x12\x16\n\x0emeeting_number\x18\x03 \x01(\t\x12\x18\n\x10meeting_password\x18\x04 \x01(\tB\x19\n\x0f\x65\x64u.cmu.cs.ikeaB\x06Protosb\x06proto3')
+  serialized_pb=_b('\n\nikea.proto\x12\x08sandwich\"\xfc\x01\n\x05State\x12\x14\n\x0cupdate_count\x18\x01 \x01(\x03\x12\"\n\x04step\x18\x02 \x01(\x0e\x32\x14.sandwich.State.Step\x12\x1e\n\x16\x66rames_with_one_buckle\x18\x03 \x01(\x05\x12\x1f\n\x17\x66rames_with_two_buckles\x18\x04 \x01(\x05\"x\n\x04Step\x12\t\n\x05START\x10\x00\x12\x08\n\x04\x42\x41SE\x10\x01\x12\x08\n\x04PIPE\x10\x02\x12\t\n\x05SHADE\x10\x03\x12\n\n\x06\x42UCKLE\x10\x04\x12\x0f\n\x0b\x42LACKCIRCLE\x10\x06\x12\x08\n\x04LAMP\x10\x07\x12\x08\n\x04\x42ULB\x10\x08\x12\x0b\n\x07\x42ULBTOP\x10\t\x12\x08\n\x04\x44ONE\x10\n\"\x9a\x01\n\x0eToServerExtras\x12\x38\n\x0bzoom_status\x18\x01 \x01(\x0e\x32#.sandwich.ToServerExtras.ZoomStatus\x12\x1e\n\x05state\x18\x02 \x01(\x0b\x32\x0f.sandwich.State\".\n\nZoomStatus\x12\x0b\n\x07NO_CALL\x10\x00\x12\t\n\x05START\x10\x01\x12\x08\n\x04STOP\x10\x02\"\xe3\x01\n\x0eToClientExtras\x12\x36\n\tzoom_info\x18\x01 \x01(\x0b\x32!.sandwich.ToClientExtras.ZoomInfoH\x00\x12 \n\x05state\x18\x02 \x01(\x0b\x32\x0f.sandwich.StateH\x00\x1a\x61\n\x08ZoomInfo\x12\x0f\n\x07\x61pp_key\x18\x01 \x01(\t\x12\x12\n\napp_secret\x18\x02 \x01(\t\x12\x16\n\x0emeeting_number\x18\x03 \x01(\t\x12\x18\n\x10meeting_password\x18\x04 \x01(\tB\x14\n\x12zoom_info_or_stateB\x19\n\x0f\x65\x64u.cmu.cs.ikeaB\x06Protosb\x06proto3')
 )
 
 
@@ -36,46 +36,46 @@ _STATE_STEP = _descriptor.EnumDescriptor(
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='NOTHING', index=1, number=1,
+      name='BASE', index=1, number=1,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='BASE', index=2, number=2,
+      name='PIPE', index=2, number=2,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='PIPE', index=3, number=3,
+      name='SHADE', index=3, number=3,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='SHADE', index=4, number=4,
+      name='BUCKLE', index=4, number=4,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='BUCKLE', index=5, number=5,
+      name='BLACKCIRCLE', index=5, number=6,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='BLACK_CIRCLE', index=6, number=6,
+      name='LAMP', index=6, number=7,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='SHADE_BASE', index=7, number=7,
+      name='BULB', index=7, number=8,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='BULB', index=8, number=8,
+      name='BULBTOP', index=8, number=9,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='BULB_TOP', index=9, number=9,
+      name='DONE', index=9, number=10,
       serialized_options=None,
       type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=158,
-  serialized_end=289,
+  serialized_start=157,
+  serialized_end=277,
 )
 _sym_db.RegisterEnumDescriptor(_STATE_STEP)
 
@@ -100,8 +100,8 @@ _TOSERVEREXTRAS_ZOOMSTATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=400,
-  serialized_end=446,
+  serialized_start=388,
+  serialized_end=434,
 )
 _sym_db.RegisterEnumDescriptor(_TOSERVEREXTRAS_ZOOMSTATUS)
 
@@ -155,7 +155,7 @@ _STATE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=25,
-  serialized_end=289,
+  serialized_end=277,
 )
 
 
@@ -193,8 +193,8 @@ _TOSERVEREXTRAS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=292,
-  serialized_end=446,
+  serialized_start=280,
+  serialized_end=434,
 )
 
 
@@ -245,8 +245,8 @@ _TOCLIENTEXTRAS_ZOOMINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=553,
-  serialized_end=650,
+  serialized_start=545,
+  serialized_end=642,
 )
 
 _TOCLIENTEXTRAS = _descriptor.Descriptor(
@@ -265,7 +265,7 @@ _TOCLIENTEXTRAS = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='state', full_name='sandwich.ToClientExtras.state', index=1,
-      number=3, type=11, cpp_type=10, label=1,
+      number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -281,9 +281,12 @@ _TOCLIENTEXTRAS = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
+    _descriptor.OneofDescriptor(
+      name='zoom_info_or_state', full_name='sandwich.ToClientExtras.zoom_info_or_state',
+      index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=449,
-  serialized_end=650,
+  serialized_start=437,
+  serialized_end=664,
 )
 
 _STATE.fields_by_name['step'].enum_type = _STATE_STEP
@@ -294,6 +297,12 @@ _TOSERVEREXTRAS_ZOOMSTATUS.containing_type = _TOSERVEREXTRAS
 _TOCLIENTEXTRAS_ZOOMINFO.containing_type = _TOCLIENTEXTRAS
 _TOCLIENTEXTRAS.fields_by_name['zoom_info'].message_type = _TOCLIENTEXTRAS_ZOOMINFO
 _TOCLIENTEXTRAS.fields_by_name['state'].message_type = _STATE
+_TOCLIENTEXTRAS.oneofs_by_name['zoom_info_or_state'].fields.append(
+  _TOCLIENTEXTRAS.fields_by_name['zoom_info'])
+_TOCLIENTEXTRAS.fields_by_name['zoom_info'].containing_oneof = _TOCLIENTEXTRAS.oneofs_by_name['zoom_info_or_state']
+_TOCLIENTEXTRAS.oneofs_by_name['zoom_info_or_state'].fields.append(
+  _TOCLIENTEXTRAS.fields_by_name['state'])
+_TOCLIENTEXTRAS.fields_by_name['state'].containing_oneof = _TOCLIENTEXTRAS.oneofs_by_name['zoom_info_or_state']
 DESCRIPTOR.message_types_by_name['State'] = _STATE
 DESCRIPTOR.message_types_by_name['ToServerExtras'] = _TOSERVEREXTRAS
 DESCRIPTOR.message_types_by_name['ToClientExtras'] = _TOCLIENTEXTRAS
