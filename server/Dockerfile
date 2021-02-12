@@ -30,3 +30,16 @@ RUN apt-get install -y \
 # fix bug for hdf5 for Caffe. See https://github.com/NVIDIA/DIGITS/issues/156
 RUN cd /usr/lib/x86_64-linux-gnu && ln -s libhdf5_serial.so libhdf5.so && \
     ln -s libhdf5_serial_hl.so libhdf5_hl.so
+
+RUN python3 -m pip install --upgrade pip
+
+COPY . /gabriel-ikea
+
+WORKDIR /gabriel-ikea
+RUN python3 -m pip install -r requirements.txt
+
+ENV FASTER_RCNN_ROOT /gabriel-ikea/py-faster-rcnn
+
+# install python dependencies
+WORKDIR /gabriel-ikea/py-faster-rcnn/caffe-fast-rcnn/python
+RUN python3 -m pip install -r requirements.txt
