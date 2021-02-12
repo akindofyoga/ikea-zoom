@@ -36,6 +36,10 @@ import edu.cmu.cs.ikea.Protos.ToClientExtras;
 import edu.cmu.cs.ikea.Protos.ToClientExtras.ZoomInfo;
 import edu.cmu.cs.ikea.Protos.ToServerExtras;
 import edu.cmu.cs.ikea.utils.Protobuf;
+import edu.cmu.cs.ikea.Protos.State;
+import edu.cmu.cs.ikea.Protos.State.Step;
+
+import static edu.cmu.cs.ikea.utils.Protobuf.pack;
 
 public class GabrielActivity extends AppCompatActivity {
     private static final String TAG = "GabrielActivity";
@@ -65,7 +69,7 @@ public class GabrielActivity extends AppCompatActivity {
                     ToServerExtras toServerExtras = ToServerExtras.newBuilder().setZoomStatus(
                             ToServerExtras.ZoomStatus.STOP).build();
                     InputFrame inputFrame = InputFrame.newBuilder().setExtras(
-                            Protobuf.pack(toServerExtras)).build();
+                            pack(toServerExtras)).build();
                     serverComm.send(inputFrame, SOURCE, true);
                 }
             });
@@ -87,7 +91,7 @@ public class GabrielActivity extends AppCompatActivity {
 
         // Once this clinet is changed to support multiple tasks, we should start with an empty
         // state
-        this.state = edu.cmu.cs.ikea.Protos.State.newBuilder()
+        this.state = State.newBuilder()
                 .setUpdateCount(0L)
                 .setStep(edu.cmu.cs.ikea.Protos.State.Step.START)
                 .setFramesWithOneBuckle(0)
@@ -141,7 +145,6 @@ public class GabrielActivity extends AppCompatActivity {
 
         serverComm = ServerComm.createServerComm(
                 consumer, BuildConfig.GABRIEL_HOST, PORT, getApplication(), onDisconnect);
-
         this.cameraCapture = new CameraCapture(this, analyzer, WIDTH, HEIGHT, viewFinder);
         this.yuvToJPEGConverter = new YuvToJPEGConverter(this);
     }
@@ -164,7 +167,7 @@ public class GabrielActivity extends AppCompatActivity {
                 return InputFrame.newBuilder()
                         .setPayloadType(Protos.PayloadType.IMAGE)
                         .addPayloads(jpegByteString)
-                        .setExtras(Protobuf.pack(toServerExtras))
+                        .setExtras(pack(toServerExtras))
                         .build();
             }, SOURCE, false);
 
@@ -183,7 +186,7 @@ public class GabrielActivity extends AppCompatActivity {
                 .setZoomStatus(ToServerExtras.ZoomStatus.START)
                 .setState(state)
                 .build();
-        InputFrame inputFrame = InputFrame.newBuilder().setExtras(Protobuf.pack(extras)).build();
+        InputFrame inputFrame = InputFrame.newBuilder().setExtras(pack(extras)).build();
         this.state = null;  // Stop sending frames to server until client receives new state
         serverComm.send(inputFrame, SOURCE, true);
     }

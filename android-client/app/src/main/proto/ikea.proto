@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package sandwich;
+package ikea;
 
 option java_package = "edu.cmu.cs.ikea";
 option java_outer_classname = "Protos";
