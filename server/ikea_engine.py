@@ -96,15 +96,28 @@ class IkeaEngine(cognitive_engine.Engine):
     def handle(self, input_frame):
         to_server_extras = cognitive_engine.unpack_extras(
             ikea_pb2.ToServerExtras, input_frame)
+        
+        if (to_server_extras.zoom_status ==
+              ikea_pb2.ToServerExtras.ZoomStatus.STOP):
+            msg = {
+                'zoom_action': 'stop'
+            }
+            self._engine_conn.send(msg)
+            pipe_output = self._engine_conn.recv()
+            new_state_name = pipe_output.get('state')
+            logger.info('Zoom Stopped. New state: %s', new_state_name)
+            state = cv_rules.State[new_state_name.upper()]
+            return state.update_result_wrapper(update_count=0)
+        
 
         # When State contains a oneof field for different tasks, we can see if
         # none have been set using to_server_extras.WhichOneof('')
-
+        
         if to_server_extras.state.step == ikea_pb2.State.Step.DONE:
             status = gabriel_pb2.ResultWrapper.Status.SUCCESS
             return cognitive_engine.create_result_wrapper(status)
         elif to_server_extras.state.step == ikea_pb2.State.Step.START:
-            return State.BASE.create_result_wrapper(update_count=0)
+            return cv_rules.State.BASE.update_result_wrapper(update_count=1)
 
         state = PROTO_TO_STATE[to_server_extras.state.step]
         if (to_server_extras.zoom_status ==
@@ -129,17 +142,6 @@ class IkeaEngine(cognitive_engine.Engine):
 
             result_wrapper.extras.Pack(to_client_extras)
             return result_wrapper
-        elif (to_server_extras.zoom_status ==
-              ikea_pb2.ToServerExtras.ZoomStatus.STOP):
-            msg = {
-                'zoom_action': 'stop'
-            }
-            self._engine_conn.send(msg)
-            pipe_output = self._engine_conn.recv()
-            new_state_name = pipe_output.get('state')
-            logger.info('Zoom Stopped. New state: %s', new_state_name)
-            state = cv_rules.State[new_state_name.upper()]
-            return state.create_result_wrapper(update_count=0)
 
         assert len(input_frame.payloads) == 1
         if input_frame.payload_type != gabriel_pb2.PayloadType.IMAGE:
@@ -158,27 +160,28 @@ class IkeaEngine(cognitive_engine.Engine):
 
         update_count = old_state.update_count
         old_step = old_state.step
-        if old_state == ikea_pb2.State.Step.BASE:
+
+        if old_step == ikea_pb2.State.Step.BASE:
             return cv_rules.base_result(dets_for_class, update_count)
-        elif old_state == ikea_pb2.State.Step.PIPE:
+        elif old_step == ikea_pb2.State.Step.PIPE:
             return cv_rules.pipe_result(dets_for_class, update_count)
-        elif old_state == ikea_pb2.State.Step.SHADE:
+        elif old_step == ikea_pb2.State.Step.SHADE:
             return cv_rules.shade_result(dets_for_class, update_count)
-        elif old_state == ikea_pb2.State.Step.BUCKLE:
+        elif old_step == ikea_pb2.State.Step.BUCKLE:
             frames_with_one_buckle = old_state.frames_with_one_buckle
             frames_with_two_buckles = old_state.frames_with_two_buckles
             return cv_rules.buckle_result(
                 dets_for_class, update_count, frames_with_one_buckle,
                 frames_with_two_buckles)
-        elif old_state == ikea_pb2.State.Step.BLACKCIRCLE:
+        elif old_step == ikea_pb2.State.Step.BLACKCIRCLE:
             return cv_rules.blackcircle_result(dets_for_class, update_count)
-        elif old_state == ikea_pb2.State.Step.LAMP:
+        elif old_step == ikea_pb2.State.Step.LAMP:
             return cv_rules.lamp_result(dets_for_class, update_count)
-        elif old_state == ikea_pb2.State.Step.BULB:
+        elif old_step == ikea_pb2.State.Step.BULB:
             return cv_rules.bulb_result(dets_for_class, update_count)
-        elif old_state == ikea_pb2.State.Step.BULBTOP:
+        elif old_step == ikea_pb2.State.Step.BULBTOP:
             return cv_rules.bulbtop_result(dets_for_class, update_count)
-        elif old_state == ikea_pb2.State.Step.DONE:
+        elif old_step == ikea_pb2.State.Step.DONE:
             return cv_rules.done_result(dets_for_class, update_count)
         else:
             raise Exception('Bad State')

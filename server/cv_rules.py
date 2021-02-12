@@ -1,7 +1,13 @@
 from enum import Enum
+import os
+import logging
+
 import ikea_pb2
 from gabriel_protocol import gabriel_pb2
 from gabriel_server import cognitive_engine
+
+
+logger = logging.getLogger(__name__)
 
 
 IMAGE_DIR = 'images'
@@ -101,7 +107,7 @@ def base_result(dets_for_class, update_count):
     if len(dets_for_class[BASE]) == 0:
         return State.BASE.result_wrapper_without_update(update_count)
 
-    return State.PIPE.create_result_wrapper(update_count + 1)
+    return State.PIPE.update_result_wrapper(update_count + 1)
 
 
 def pipe_result(dets_for_class, update_count):
@@ -125,7 +131,7 @@ def pipe_result(dets_for_class, update_count):
             if pipe_height / base_height < 1.5:
                 continue
 
-            return State.SHADE.create_result_wrapper(update_count + 1)
+            return State.SHADE.update_result_wrapper(update_count + 1)
 
     return State.PIPE.result_wrapper_without_update(update_count)
 
@@ -134,7 +140,7 @@ def shade_result(dets_for_class, update_count):
     if len(dets_for_class[SHADE]) == 0:
         return State.SHADE.result_wrapper_without_update(update_count)
 
-    return State.BUCKLE.create_result_wrapper(update_count + 1)
+    return State.BUCKLE.update_result_wrapper(update_count + 1)
 
 
 def _count_buckles(shadetops, buckles):
@@ -179,7 +185,7 @@ def buckle_result(dets_for_class, update_count, frames_with_one_buckle,
         update_count += 1
 
         if frames_with_two_buckles > 3:
-            return State.BLACKCIRCLE.create_result_wrapper(update_count)
+            return State.BLACKCIRCLE.update_result_wrapper(update_count)
     elif n_buckles == 1:
         frames_with_one_buckle += 1
         frames_with_two_buckles = 0
@@ -187,7 +193,7 @@ def buckle_result(dets_for_class, update_count, frames_with_one_buckle,
 
         # We only give this instruction when frames_with_one_buckle is
         # exactly 5 so it does not get repeated
-        if engine_fields.ikea.frames_with_one_buckle == 5:
+        if frames_with_one_buckle == 5:
             result = gabriel_pb2.ResultWrapper.Result()
             result.payload_type = gabriel_pb2.PayloadType.TEXT
             result.payload = ONE_WIRE_INSTRUCTION_BYTES
@@ -209,21 +215,21 @@ def blackcircle_result(dets_for_class, update_count):
     if len(dets_for_class[BLACKCIRCLE]) == 0:
         return State.BLACKCIRCLE.result_wrapper_without_update(update_count)
 
-    return State.LAMP.create_result_wrapper(update_count + 1)
+    return State.LAMP.update_result_wrapper(update_count + 1)
 
 
 def lamp_result(dets_for_class, update_count):
     if len(dets_for_class[LAMP]) == 0:
         return State.LAMP.result_wrapper_without_update(update_count)
 
-    return State.BULB.create_result_wrapper(update_count + 1)
+    return State.BULB.update_result_wrapper(update_count + 1)
 
 
 def bulb_result(dets_for_class, update_count):
     if len(dets_for_class[BULB]) == 0:
         return State.BULB.result_wrapper_without_update(update_count)
 
-    return State.BULBTOP.create_result_wrapper(update_count + 1)
+    return State.BULBTOP.update_result_wrapper(update_count + 1)
 
 
 def bulbtop_result(dets_for_class, update_count):
@@ -257,6 +263,6 @@ def bulbtop_result(dets_for_class, update_count):
                           shadetop_height * 0.25):
                 continue
 
-            return State.DONE.create_result_wrapper(update_count + 1)
+            return State.DONE.update_result_wrapper(update_count + 1)
 
     return State.BULBTOP.result_wrapper_without_update(update_count)

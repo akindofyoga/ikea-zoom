@@ -1,0 +1,3 @@
+[submodule "server/py-faster-rcnn"]
+	path = server/py-faster-rcnn
+	url = git@github.com:cmusatyalab/py-faster-rcnn.git

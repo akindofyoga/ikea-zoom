@@ -29,9 +29,7 @@ $(document).ready(function() {
         oldState = this;
 
         // Send this.id to client
-        var msg = {
-            state: this.id;
-        };
+        var msg = { state: this.id };
         socket.send(JSON.stringify(msg));
     });
 });
